@@ -188,7 +188,13 @@ function Update-Preview {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory = $true, Position = 0)]
-        [System.Windows.Controls.Canvas]$Canvas
+        [System.Windows.Controls.Canvas]$Canvas,
+        [string]$OverrideTheme,
+        [int]$OverrideOpacity = -1,
+        [int]$OverrideFontSize = -1,
+        [string]$OverrideFontFace,
+        [string]$OverrideCursorShape,
+        [string]$OverrideColorScheme
     )
 
     try {
@@ -202,8 +208,14 @@ function Update-Preview {
         # 1. Clear canvas
         $Canvas.Children.Clear()
 
-        # 2. Load config
+        # 2. Load config with overrides
         $Config = Get-AppConfig
+        if ($OverrideTheme) { $Config.OMPTheme = $OverrideTheme }
+        if ($OverrideOpacity -ge 0) { $Config.Opacity = $OverrideOpacity }
+        if ($OverrideFontSize -ge 0) { $Config.FontSize = $OverrideFontSize }
+        if ($OverrideFontFace) { $Config.FontFace = $OverrideFontFace }
+        if ($OverrideCursorShape) { $Config.CursorShape = $OverrideCursorShape }
+        if ($OverrideColorScheme) { $Config.ColorScheme = $OverrideColorScheme }
 
         # 3. Resolve colour scheme
         $schemes    = Get-WTColorSchemes

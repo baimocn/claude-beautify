@@ -69,7 +69,15 @@ function Initialize-ConfigView {
         $script:PreviewTimer.Stop()
         try {
             $cv = $script:ConfigViewElement.FindName("PreviewCanvas")
-            if ($cv) { Update-Preview -Canvas $cv }
+            if ($cv) {
+                $op = [int]$script:ConfigViewElement.FindName("SliderOpacity").Value
+                $fs = [int]$script:ConfigViewElement.FindName("SliderFontSize").Value
+                $ff = $script:ConfigViewElement.FindName("ComboFont").SelectedItem
+                $cs = $script:ConfigViewElement.FindName("ComboScheme").SelectedItem
+                $cr = $script:ConfigViewElement.FindName("ComboCursor").SelectedItem
+                $th = $script:ConfigViewElement.FindName("ComboTheme").SelectedItem
+                Update-Preview -Canvas $cv -OverrideOpacity $op -OverrideFontSize $fs -OverrideFontFace $ff -OverrideColorScheme $cs -OverrideCursorShape $cr -OverrideTheme $th
+            }
         } catch {}
     })
 
@@ -83,35 +91,41 @@ function Initialize-ConfigView {
         try {
             $slider = $script:ConfigViewElement.FindName("SliderOpacity")
             $textbox = $script:ConfigViewElement.FindName("TextOpacity")
-            Write-Host "DEBUG: slider=$($slider -ne $null) textbox=$($textbox -ne $null)"
             if ($slider -and $textbox) {
                 $textbox.Text = [string][int]$slider.Value
             }
-        } catch { Write-Host "Slider Err: $($_.Exception.Message)" }
+            if ($script:PreviewTimer) { $script:PreviewTimer.Stop(); $script:PreviewTimer.Start() }
+        } catch {}
     })
     $script:ConfigViewElement.FindName("SliderFontSize").Add_ValueChanged({
         try {
             $val = [int]$script:ConfigViewElement.FindName("SliderFontSize").Value
             $script:ConfigViewElement.FindName("TextFontSize").Text = [string]$val
             if ($script:PreviewTimer) { $script:PreviewTimer.Stop(); $script:PreviewTimer.Start() }
-        } catch { Write-Host "Slider Err: $($_.Exception.Message)" }
+        } catch {}
     })
     $script:ConfigViewElement.FindName("SliderCursorHeight").Add_ValueChanged({
-        $tb = $script:ConfigViewElement.FindName("TextCursorHeight")
-        if ($tb) { $tb.Text = [string][int]$script:ConfigViewElement.FindName("SliderCursorHeight").Value }
-        & $schedulePreview
+        try {
+            $tb = $script:ConfigViewElement.FindName("TextCursorHeight")
+            if ($tb) { $tb.Text = [string][int]$script:ConfigViewElement.FindName("SliderCursorHeight").Value }
+            if ($script:PreviewTimer) { $script:PreviewTimer.Stop(); $script:PreviewTimer.Start() }
+        } catch {}
     })
 
     # Wire combo changes
     foreach ($comboName in @("ComboFont", "ComboScheme", "ComboCursor", "ComboTheme")) {
-        $combo = $script:ConfigViewElement.FindName($comboName)
-        $sb = $schedulePreview
-        $combo.Add_SelectionChanged($sb)
+        $script:ConfigViewElement.FindName($comboName).Add_SelectionChanged({
+            try { if ($script:PreviewTimer) { $script:PreviewTimer.Stop(); $script:PreviewTimer.Start() } } catch {}
+        })
     }
 
     # Wire acrylic checkbox
-    $script:ConfigViewElement.FindName("ChkAcrylic").Add_Checked($schedulePreview)
-    $script:ConfigViewElement.FindName("ChkAcrylic").Add_Unchecked($schedulePreview)
+    $script:ConfigViewElement.FindName("ChkAcrylic").Add_Checked({
+        try { if ($script:PreviewTimer) { $script:PreviewTimer.Stop(); $script:PreviewTimer.Start() } } catch {}
+    })
+    $script:ConfigViewElement.FindName("ChkAcrylic").Add_Unchecked({
+        try { if ($script:PreviewTimer) { $script:PreviewTimer.Stop(); $script:PreviewTimer.Start() } } catch {}
+    })
 
     # Initial preview
     Update-Preview -Canvas $script:ConfigViewElement.FindName("PreviewCanvas")

@@ -45,7 +45,7 @@
         $selected = $lb.SelectedItem
         if (-not $selected) { return }
         $script:ThemeViewElement.FindName("ThemeName").Text = $selected
-        Update-Preview -Canvas $script:ThemeViewElement.FindName("ThemePreviewCanvas")
+        Update-Preview -Canvas $script:ThemeViewElement.FindName("ThemePreviewCanvas") -OverrideTheme $selected
     })
 
     # Apply button
