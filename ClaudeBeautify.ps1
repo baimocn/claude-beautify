@@ -27,6 +27,7 @@ Add-Type -AssemblyName System.Windows.Forms
 $script:ScriptRoot = $PSScriptRoot
 $modulePath = Join-Path $script:ScriptRoot "Modules"
 
+Import-Module (Join-Path $modulePath "Constants.psm1") -Force -DisableNameChecking
 Import-Module (Join-Path $modulePath "Utils.psm1") -Force -DisableNameChecking
 Import-Module (Join-Path $modulePath "State.psm1") -Force -DisableNameChecking
 Import-Module (Join-Path $modulePath "Detection.psm1") -Force -DisableNameChecking

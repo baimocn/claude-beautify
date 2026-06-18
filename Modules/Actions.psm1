@@ -215,7 +215,7 @@ function Apply-WTSettings {
         }
 
         # Load current WT settings
-        $wtSettingsPath = Join-Path $env:LOCALAPPDATA "Packages\Microsoft.WindowsTerminal_8wekyb3d8bbwe\LocalState\settings.json"
+        $wtSettingsPath = Get-WTSettingsPath
         $wtSettings = Read-JsonFile $wtSettingsPath
 
         # If WT settings don't exist yet, start from scratch
@@ -252,27 +252,7 @@ function Apply-WTSettings {
         $defaults | Add-Member -NotePropertyName "padding"          -NotePropertyValue $config.Padding    -Force
 
         # Ensure Tokyo Night scheme exists in schemes array
-        $tokyoNightScheme = @{
-            name          = "Tokyo Night"
-            background    = "#1A1B26"
-            foreground    = "#C0CAF5"
-            black         = "#15161E"
-            red           = "#F7768E"
-            green         = "#9ECE6A"
-            yellow        = "#E0AF68"
-            blue          = "#7AA2F7"
-            purple        = "#BB9AF7"
-            cyan          = "#7DCFFF"
-            white         = "#A9B1D6"
-            brightBlack   = "#414868"
-            brightRed     = "#F7768E"
-            brightGreen   = "#9ECE6A"
-            brightYellow  = "#E0AF68"
-            brightBlue    = "#7AA2F7"
-            brightPurple  = "#BB9AF7"
-            brightCyan    = "#7DCFFF"
-            brightWhite   = "#C0CAF5"
-        }
+        $tokyoNightScheme = Get-TokyoNightScheme
 
         # Ensure schemes array exists
         if ($null -eq $wtSettings.schemes -or $wtSettings.schemes -isnot [System.Collections.IList]) {
@@ -611,7 +591,7 @@ function Uninstall-WTConfig {
     try {
         Write-AppLog "Uninstall-WTConfig: starting..."
 
-        $wtSettingsPath = Join-Path $env:LOCALAPPDATA "Packages\Microsoft.WindowsTerminal_8wekyb3d8bbwe\LocalState\settings.json"
+        $wtSettingsPath = Get-WTSettingsPath
         $wtSettings = Read-JsonFile $wtSettingsPath
 
         if ($null -eq $wtSettings) {

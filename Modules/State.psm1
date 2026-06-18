@@ -9,17 +9,7 @@ $Script:AppData = @{
         PSProfile   = @{ Installed = $false; Theme = ""; Description = "Oh My Posh + PSReadLine config" }
         StatusLine  = @{ Installed = $false; Description = "Claude Code context and token monitor" }
     }
-    Config = @{
-        Opacity      = 85
-        FontSize     = 12
-        FontFace     = "CaskaydiaCove Nerd Font"
-        UseAcrylic   = $true
-        CursorShape  = "filledBox"
-        CursorHeight = 25
-        ColorScheme  = "Tokyo Night"
-        OMPTheme     = "tokyonight_storm"
-        Padding      = "8, 8, 8, 8"
-    }
+    Config = Get-DefaultConfig
     OMPThemes     = @()
     WTSchemes     = @()
     SavedProfiles = @()
@@ -84,17 +74,7 @@ function Reset-AppData {
     [CmdletBinding()]
     param()
 
-    $Script:AppData.Config = @{
-        Opacity      = 85
-        FontSize     = 12
-        FontFace     = "CaskaydiaCove Nerd Font"
-        UseAcrylic   = $true
-        CursorShape  = "filledBox"
-        CursorHeight = 25
-        ColorScheme  = "Tokyo Night"
-        OMPTheme     = "tokyonight_storm"
-        Padding      = "8, 8, 8, 8"
-    }
+    $Script:AppData.Config = Get-DefaultConfig
 }
 
 function Initialize-AppData {

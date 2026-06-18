@@ -8,23 +8,10 @@ function Get-WTColorSchemes {
     [CmdletBinding()]
     param()
 
-    $defaultScheme = @{
-        name     = "Tokyo Night"
-        background = "#1A1B26"
-        foreground = "#C0CAF5"
-        black    = "#15161E"
-        red      = "#F7768E"
-        green    = "#9ECE6A"
-        yellow   = "#E0AF68"
-        blue     = "#7AA2F7"
-        purple   = "#BB9AF7"
-        cyan     = "#7DCFFF"
-        white    = "#A9B1D6"
-    }
+    $defaultScheme = Get-TokyoNightScheme
 
     try {
-        $settingsPath = Join-Path $env:LOCALAPPDATA `
-            "Packages\Microsoft.WindowsTerminal_8wekyb3d8bbwe\LocalState\settings.json"
+        $settingsPath = Get-WTSettingsPath
 
         if (-not (Test-Path $settingsPath)) {
             Write-Verbose "Windows Terminal settings not found; using default Tokyo Night scheme."
@@ -223,18 +210,7 @@ function Update-Preview {
         $scheme     = $schemes | Where-Object { $_.name -eq $schemeName } | Select-Object -First 1
 
         # Build a lookup hashtable from the matched scheme (or defaults)
-        $defaultTokyo = @{
-            background = "#1A1B26"
-            foreground = "#C0CAF5"
-            black      = "#15161E"
-            red        = "#F7768E"
-            green      = "#9ECE6A"
-            yellow     = "#E0AF68"
-            blue       = "#7AA2F7"
-            purple     = "#BB9AF7"
-            cyan       = "#7DCFFF"
-            white      = "#A9B1D6"
-        }
+        $defaultTokyo = Get-TokyoNightScheme
 
         $sc = @{}
         foreach ($key in $defaultTokyo.Keys) {

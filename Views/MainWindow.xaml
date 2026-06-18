@@ -179,7 +179,7 @@
                             VerticalAlignment="Bottom"
                             Margin="16,0,0,16">
                     <TextBlock Text="v1.0.0"
-                               Foreground="#5A5249"
+                               Foreground="#9E9589"
                                FontSize="11"
                                HorizontalAlignment="Center" />
                 </StackPanel>

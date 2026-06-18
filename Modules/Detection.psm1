@@ -57,7 +57,7 @@ function Detect-WindowsTerminal {
 
         if ($wtInstalled) {
             $wtVersion = "detected"
-            $settingsPath = Join-Path $env:LOCALAPPDATA "Packages\Microsoft.WindowsTerminal_8wekyb3d8bbwe\LocalState\settings.json"
+            $settingsPath = Get-WTSettingsPath
             $settings = Read-JsonFile $settingsPath
 
             if ($null -ne $settings) {
@@ -96,7 +96,7 @@ function Detect-WTConfig {
     param()
 
     try {
-        $settingsPath = Join-Path $env:LOCALAPPDATA "Packages\Microsoft.WindowsTerminal_8wekyb3d8bbwe\LocalState\settings.json"
+        $settingsPath = Get-WTSettingsPath
         $settings = Read-JsonFile $settingsPath
 
         if ($null -eq $settings) {

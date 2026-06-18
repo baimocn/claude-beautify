@@ -1,7 +1,7 @@
 #!/bin/bash
 # ═══════════════════════════════════════════════════════════
 #  Claude Code Status Bar — 上下文窗口 & Token 消耗实时监控
-#  https://github.com/your-name/claude-code-statusline
+#  https://github.com/baimocn/claude-beautify
 # ═══════════════════════════════════════════════════════════
 
 cat | PYTHONIOENCODING=utf-8 python -c "

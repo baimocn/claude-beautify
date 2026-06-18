@@ -121,7 +121,7 @@
             <TextBlock Text="实时预览" FontSize="13" FontWeight="SemiBold" Foreground="#2C2521" Margin="0,0,0,8"/>
 
             <Border Background="#FFFFFF" CornerRadius="8" BorderBrush="#E0D8CC" BorderThickness="1" ClipToBounds="True">
-                <Canvas x:Name="PreviewCanvas" Width="560" Height="300" HorizontalAlignment="Left"/>
+                <Canvas x:Name="PreviewCanvas" MaxWidth="560" MaxHeight="300" HorizontalAlignment="Stretch"/>
             </Border>
 
             <StackPanel Orientation="Horizontal" Margin="0,12,0,0">

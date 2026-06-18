@@ -9,6 +9,7 @@
 
     $config = Get-AppConfig
     $script:ThemeViewElement = $ViewElement
+    $script:PreviousTheme = $config.OMPTheme
 
     # Populate theme list
     $listBox = $ViewElement.FindName("ThemeList")
@@ -28,8 +29,26 @@
     }
 
     # Search filter
-    $ViewElement.FindName("SearchTheme").Add_TextChanged({
+    $searchBox = $ViewElement.FindName("SearchTheme")
+    $searchBox.Text = "搜索主题..."
+    $searchBox.Foreground = [System.Windows.Media.Brushes]::Gray
+    $searchBox.Add_GotFocus({
+        $sb = $script:ThemeViewElement.FindName("SearchTheme")
+        if ($sb.Text -eq "搜索主题...") {
+            $sb.Text = ""
+            $sb.Foreground = [System.Windows.Media.Brushes]::Black
+        }
+    })
+    $searchBox.Add_LostFocus({
+        $sb = $script:ThemeViewElement.FindName("SearchTheme")
+        if ([string]::IsNullOrWhiteSpace($sb.Text)) {
+            $sb.Text = "搜索主题..."
+            $sb.Foreground = [System.Windows.Media.Brushes]::Gray
+        }
+    })
+    $searchBox.Add_TextChanged({
         $filter = $script:ThemeViewElement.FindName("SearchTheme").Text.ToLower()
+        if ($filter -eq "搜索主题...") { return }
         $lb = $script:ThemeViewElement.FindName("ThemeList")
         $lb.Items.Clear()
         foreach ($t in $allThemes) {
@@ -63,8 +82,8 @@
 
     # Revert button
     $ViewElement.FindName("BtnRevertTheme").Add_Click({
-        Set-AppData -Path "Config.OMPTheme" -Value "tokyonight_storm"
-        $script:ThemeViewElement.FindName("ThemeList").SelectedItem = "tokyonight_storm"
+        Set-AppData -Path "Config.OMPTheme" -Value $script:PreviousTheme
+        $script:ThemeViewElement.FindName("ThemeList").SelectedItem = $script:PreviousTheme
         Update-Preview -Canvas $script:ThemeViewElement.FindName("ThemePreviewCanvas")
     })
 
