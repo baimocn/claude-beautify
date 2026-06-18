@@ -23,6 +23,10 @@ function Install-OhMyPosh {
         Write-AppLog "Running: choco install oh-my-posh -y"
         $output = & cmd /c "choco install oh-my-posh -y" 2>&1
         Write-AppLog ($output | Out-String)
+        if ($LASTEXITCODE -ne 0) {
+            Write-AppLog "Chocolatey exited with code $LASTEXITCODE" -Level Error
+            return @{ Success = $false; Message = "安装失败 (exit code: $LASTEXITCODE)" }
+        }
 
         # Fix PATH — ensure oh-my-posh is reachable
         $ompCmd = Get-Command oh-my-posh -ErrorAction SilentlyContinue
@@ -71,6 +75,10 @@ function Uninstall-OhMyPosh {
         Write-AppLog "Running: choco uninstall oh-my-posh -y"
         $output = & cmd /c "choco uninstall oh-my-posh -y" 2>&1
         Write-AppLog ($output | Out-String)
+        if ($LASTEXITCODE -ne 0) {
+            Write-AppLog "Chocolatey exited with code $LASTEXITCODE" -Level Error
+            return @{ Success = $false; Message = "卸载失败 (exit code: $LASTEXITCODE)" }
+        }
 
         Update-ComponentStatus
         Write-AppLog "Uninstall-OhMyPosh: complete."
@@ -102,12 +110,17 @@ function Install-NerdFont {
             Write-AppLog "Running elevated: choco install cascadia-code-nerd-font -y"
             $output = & cmd /c "choco install cascadia-code-nerd-font -y" 2>&1
             Write-AppLog ($output | Out-String)
+            if ($LASTEXITCODE -ne 0) {
+                Write-AppLog "Chocolatey exited with code $LASTEXITCODE" -Level Error
+                return @{ Success = $false; Message = "安装失败 (exit code: $LASTEXITCODE)" }
+            }
         }
         else {
             Write-AppLog "Not running as admin. Launching elevated process..."
             $exitCode = Invoke-Elevated "choco install cascadia-code-nerd-font -y"
             if ($exitCode -ne 0) {
-                Write-AppLog "Elevated font install exited with code $exitCode" -Level Warn
+                Write-AppLog "Elevated font install exited with code $exitCode" -Level Error
+                return @{ Success = $false; Message = "安装失败 (exit code: $exitCode)" }
             }
         }
 
@@ -140,6 +153,10 @@ function Install-WindowsTerminal {
         Write-AppLog "Running: choco install microsoft-windows-terminal -y"
         $output = & cmd /c "choco install microsoft-windows-terminal -y" 2>&1
         Write-AppLog ($output | Out-String)
+        if ($LASTEXITCODE -ne 0) {
+            Write-AppLog "Chocolatey exited with code $LASTEXITCODE" -Level Error
+            return @{ Success = $false; Message = "安装失败 (exit code: $LASTEXITCODE)" }
+        }
 
         Update-ComponentStatus
         Write-AppLog "Install-WindowsTerminal: complete."
@@ -280,10 +297,12 @@ function Apply-WTSettings {
 
 function Apply-PSProfile {
     [CmdletBinding()]
-    param()
+    param(
+        [string]$ThemeName = "tokyonight_storm"
+    )
 
     try {
-        Write-AppLog "Apply-PSProfile: starting..."
+        Write-AppLog "Apply-PSProfile: starting... (Theme=$ThemeName)"
 
         # Load template
         $templatePath = Join-Path (Split-Path $PSScriptRoot) "Templates\profile-default.ps1"
@@ -292,6 +311,9 @@ function Apply-PSProfile {
             return @{ Success = $false; Message = "找不到模板文件: profile-default.ps1" }
         }
         $profileContent = Get-Content -Path $templatePath -Raw -Encoding UTF8 -ErrorAction Stop
+
+        # Replace the hardcoded theme name with the selected theme
+        $profileContent = $profileContent -replace '(?<=oh-my-posh init pwsh --config "\$env:POSH_THEMES_PATH\\)[^"]+(?=\.omp\.json")', $ThemeName
 
         # Target profile paths
         $profilePaths = @(

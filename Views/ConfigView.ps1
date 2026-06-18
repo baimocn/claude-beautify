@@ -144,7 +144,7 @@ function Initialize-ConfigView {
 
         # Apply to Windows Terminal and PS Profile
         $r1 = Apply-WTSettings
-        $r2 = Apply-PSProfile
+        $r2 = Apply-PSProfile -ThemeName $script:ConfigViewElement.FindName("ComboTheme").SelectedItem
 
         if ($r1.Success -and $r2.Success) {
             [System.Windows.MessageBox]::Show("配置已应用！", "提示", "OK", "Information")

@@ -8,6 +8,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { execFile } from "child_process";
+import { fileURLToPath } from "url";
+import path from "path";
 import { z } from "zod";
 
 // ---------------------------------------------------------------------------
@@ -23,7 +25,9 @@ const server = new McpServer({
 // Absolute paths to PowerShell modules
 // ---------------------------------------------------------------------------
 
-const MODULES_DIR = "D:/Desktop/claude美化/Modules";
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const MODULES_DIR = path.join(__dirname, "..", "Modules");
 
 const MODULE_IMPORTS = {
   utils: `Import-Module '${MODULES_DIR}/Utils.psm1' -Force`,
@@ -99,6 +103,47 @@ function errorContent(message) {
 }
 
 // ===========================================================================
+// Input validation
+// ===========================================================================
+
+/**
+ * Validate that a user-provided string contains only safe characters
+ * to prevent PowerShell command injection.
+ *
+ * @param {string} value - The value to validate.
+ * @param {string} fieldName - The field name for error messages.
+ * @returns {string} The validated value.
+ */
+function validateSafe(value, fieldName) {
+  if (typeof value !== "string") throw new Error(`${fieldName} must be a string`);
+  if (!/^[a-zA-Z0-9_\-\.]+$/.test(value)) throw new Error(`${fieldName} contains invalid characters: ${value}`);
+  if (value.length > 100) throw new Error(`${fieldName} too long`);
+  return value;
+}
+
+// ---------------------------------------------------------------------------
+// Component name -> PowerShell function mappings
+// ---------------------------------------------------------------------------
+
+const INSTALL_MAP = {
+  OhMyPosh: "Install-OhMyPosh",
+  NerdFont: "Install-NerdFont",
+  WinTerminal: "Install-WindowsTerminal",
+  WTConfig: "Apply-WTSettings",
+  PSProfile: "Apply-PSProfile",
+  StatusLine: "Install-StatusLine",
+};
+
+const UNINSTALL_MAP = {
+  OhMyPosh: "Uninstall-OhMyPosh",
+  NerdFont: "Uninstall-NerdFont",
+  WinTerminal: "Uninstall-WindowsTerminal",
+  WTConfig: "Uninstall-WTConfig",
+  PSProfile: "Uninstall-PSProfile",
+  StatusLine: "Uninstall-StatusLine",
+};
+
+// ===========================================================================
 // Tools
 // ===========================================================================
 
@@ -153,7 +198,9 @@ server.tool(
   async ({ component }) => {
     try {
       const preamble = psPreamble("actions");
-      const script = `${preamble}; Install-${component}`;
+      const fn = INSTALL_MAP[component];
+      if (!fn) return errorContent(`Unknown component: ${component}`);
+      const script = `${preamble}; ${fn}`;
       const { stdout, stderr, exitCode } = await runPS(script);
 
       if (exitCode !== 0) {
@@ -186,7 +233,9 @@ server.tool(
   async ({ component }) => {
     try {
       const preamble = psPreamble("actions");
-      const script = `${preamble}; Uninstall-${component}`;
+      const fn = UNINSTALL_MAP[component];
+      if (!fn) return errorContent(`Unknown component: ${component}`);
+      const script = `${preamble}; ${fn}`;
       const { stdout, stderr, exitCode } = await runPS(script);
 
       if (exitCode !== 0) {
@@ -257,6 +306,11 @@ server.tool(
     try {
       const preamble = psPreamble("actions", "detection");
       const { opacity, fontSize, useAcrylic, cursorShape, colorScheme, ompTheme } = params;
+
+      // Validate string inputs to prevent command injection
+      if (cursorShape !== undefined) validateSafe(cursorShape, "cursorShape");
+      if (colorScheme !== undefined) validateSafe(colorScheme, "colorScheme");
+      if (ompTheme !== undefined) validateSafe(ompTheme, "ompTheme");
 
       // Build a script that updates config fields and applies settings.
       // We load current AppData, mutate the Config object, save it back,
@@ -375,6 +429,7 @@ server.tool(
   },
   async ({ theme }) => {
     try {
+      validateSafe(theme, "theme");
       const preamble = psPreamble("actions", "detection");
       const script = [
         preamble,

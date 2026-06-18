@@ -53,7 +53,7 @@
         $selected = $script:ThemeViewElement.FindName("ThemeList").SelectedItem
         if (-not $selected) { return }
         Set-AppData -Path "Config.OMPTheme" -Value $selected
-        $r = Apply-PSProfile
+        $r = Apply-PSProfile -ThemeName $selected
         if ($r.Success) {
             [System.Windows.MessageBox]::Show("主题已切换为: $selected", "提示", "OK", "Information")
         } else {
