@@ -58,29 +58,90 @@ function Initialize-DashboardView {
             $ver.Text = "v$($comp.Version)"
         }
 
-        # Wire click handler - capture compKey in closure
+        # Wire click handler - async with runspace
         $key = $compKey
         $isInstalled = $comp.Installed
+        $scriptRoot = $script:ScriptRoot
         $btn.Add_Click({
+            param($sender, $e)
             try {
-                if ($isInstalled) {
-                    $fn = "Uninstall-$key"
-                } else {
-                    $fn = "Install-$key"
-                }
-                if (Get-Command $fn -ErrorAction SilentlyContinue) {
-                    $r = & $fn
-                    if ($r.Success) {
-                        [System.Windows.MessageBox]::Show($r.Message, "完成", "OK", "Information")
-                    } else {
-                        [System.Windows.MessageBox]::Show($r.Message, "失败", "OK", "Warning")
-                    }
-                    # Refresh dashboard
-                    Initialize-DashboardView -ViewElement $script:DashboardViewElement
-                } else {
+                $b = $sender
+                if ($isInstalled) { $fn = "Uninstall-$key" } else { $fn = "Install-$key" }
+
+                if (-not (Get-Command $fn -ErrorAction SilentlyContinue)) {
                     [System.Windows.MessageBox]::Show("功能暂未实现: $fn", "提示", "OK", "Information")
+                    return
                 }
+
+                $actionLabel = if ($isInstalled) { "卸载" } else { "安装" }
+                $confirm = [System.Windows.MessageBox]::Show("确定要${actionLabel} $($key) 吗？", "确认操作", "YesNo", "Question")
+                if ($confirm -ne "Yes") { return }
+
+                # Disable button and show loading
+                $origContent = $b.Content
+                $origBg = $b.Background
+                $b.Content = "请稍候..."
+                $b.IsEnabled = $false
+                $b.Background = [System.Windows.Media.BrushConverter]::new().ConvertFromString("#999999")
+
+                # Create background runspace
+                $rs = [runspacefactory]::CreateRunspace()
+                $rs.Open()
+                $ps = [powershell]::Create()
+                $ps.Runspace = $rs
+                $ps.AddScript({
+                    param($scriptRoot, $fnName)
+                    $ErrorActionPreference = "Stop"
+                    Import-Module (Join-Path $scriptRoot "Modules\Utils.psm1") -Force -DisableNameChecking
+                    Import-Module (Join-Path $scriptRoot "Modules\State.psm1") -Force -DisableNameChecking
+                    Import-Module (Join-Path $scriptRoot "Modules\Detection.psm1") -Force -DisableNameChecking
+                    Import-Module (Join-Path $scriptRoot "Modules\Actions.psm1") -Force -DisableNameChecking
+                    Import-Module (Join-Path $scriptRoot "Modules\Preview.psm1") -Force -DisableNameChecking
+                    Import-Module (Join-Path $scriptRoot "Modules\Profiles.psm1") -Force -DisableNameChecking
+                    & $fnName
+                }).AddArgument($scriptRoot).AddArgument($fn)
+
+                $job = $ps.BeginInvoke()
+
+                # Poll with DispatcherTimer
+                $timer = New-Object System.Windows.Threading.DispatcherTimer
+                $timer.Interval = [TimeSpan]::FromMilliseconds(500)
+                $timer.Tag = @{ Job=$job; PS=$ps; RS=$rs; Btn=$b; OrigContent=$origContent; OrigBg=$origBg }
+                $timer.Add_Tick({
+                    param($tSender, $tArgs)
+                    $t = $tSender
+                    $info = $t.Tag
+                    if ($info.Job.IsCompleted) {
+                        $t.Stop()
+                        try {
+                            $r = $info.PS.EndInvoke($info.Job)
+                            if ($r -and $r.Success) {
+                                [System.Windows.MessageBox]::Show($r.Message, "完成", "OK", "Information")
+                            } elseif ($r) {
+                                [System.Windows.MessageBox]::Show($r.Message, "失败", "OK", "Warning")
+                            } else {
+                                [System.Windows.MessageBox]::Show("操作已完成（无返回结果）", "完成", "OK", "Information")
+                            }
+                        } catch {
+                            [System.Windows.MessageBox]::Show("操作失败: $($_.Exception.Message)", "错误", "OK", "Error")
+                        } finally {
+                            $info.PS.Dispose()
+                            $info.RS.Close()
+                            $info.RS.Dispose()
+                            # Re-enable button
+                            $info.Btn.Content = $info.OrigContent
+                            $info.Btn.Background = $info.OrigBg
+                            $info.Btn.IsEnabled = $true
+                            # Refresh dashboard
+                            Initialize-DashboardView -ViewElement $script:DashboardViewElement
+                        }
+                    }
+                })
+                $timer.Start()
             } catch {
+                $btn.Content = $origContent
+                $btn.IsEnabled = $true
+                $btn.Background = $origBg
                 [System.Windows.MessageBox]::Show("操作失败: $($_.Exception.Message)", "错误", "OK", "Error")
             }
         })

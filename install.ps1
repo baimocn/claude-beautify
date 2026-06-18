@@ -1,4 +1,4 @@
-# ═══════════════════════════════════════════════════════
+﻿# ═══════════════════════════════════════════════════════
 #  Claude Code Terminal Beautify - All-in-One Installer
 #  Usage: powershell -ExecutionPolicy Bypass -File install.ps1
 # ═══════════════════════════════════════════════════════
@@ -12,7 +12,7 @@ function Write-Warn  { param($msg) Write-Host "  [!] $msg" -ForegroundColor Yell
 
 Write-Host ""
 Write-Host "  +====================================================+" -ForegroundColor DarkCyan
-Write-Host "  |   Claude Code Terminal Beautify - Installer v2.0    |" -ForegroundColor DarkCyan
+Write-Host "  |   Claude Code Terminal Beautify - Installer v1.0.0    |" -ForegroundColor DarkCyan
 Write-Host "  +====================================================+" -ForegroundColor DarkCyan
 Write-Host ""
 

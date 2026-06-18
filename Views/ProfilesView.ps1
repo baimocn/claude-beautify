@@ -92,7 +92,11 @@
             $delBtn.FontSize = 11
             $delBtn.Margin = [System.Windows.Thickness]::new(8,0,0,0)
             $dn = $p.name
-            $delBtn.Add_Click({ Remove-Profile -Name $dn; & $refreshList })
+            $delBtn.Add_Click({
+                $confirm = [System.Windows.MessageBox]::Show("确定要删除配置方案 ""$dn"" 吗？", "确认删除", "YesNo", "Question")
+                if ($confirm -eq "Yes") { Remove-Profile -Name $dn }
+                & $refreshList
+            })
             $btnPanel.Children.Add($delBtn) | Out-Null
 
             $expBtn = New-Object System.Windows.Controls.Button

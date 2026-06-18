@@ -1,4 +1,4 @@
-<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
     <!-- ======================== COLOR PALETTE ======================== -->
@@ -191,35 +191,7 @@
 
     <!-- ======================== STATUS BADGES ======================== -->
 
-    <!-- Installed Badge -->
-    <Style x:Key="StatusBadgeInstalled" TargetType="Border">
-        <Setter Property="CornerRadius" Value="10" />
-        <Setter Property="Background"   Value="#E8F5E9" />
-        <Setter Property="Padding"      Value="8,2" />
-        <Setter Property="Child">
-            <Setter.Value>
-                <TextBlock Text="Installed"
-                           Foreground="{StaticResource ClaudeSuccess}"
-                           FontSize="11"
-                           FontWeight="SemiBold" />
-            </Setter.Value>
-        </Setter>
-    </Style>
-
-    <!-- Not Installed Badge -->
-    <Style x:Key="StatusBadgeNotInstalled" TargetType="Border">
-        <Setter Property="CornerRadius" Value="10" />
-        <Setter Property="Background"   Value="#F5F5F5" />
-        <Setter Property="Padding"      Value="8,2" />
-        <Setter Property="Child">
-            <Setter.Value>
-                <TextBlock Text="Not Installed"
-                           Foreground="{StaticResource ClaudeTextDim}"
-                           FontSize="11"
-                           FontWeight="SemiBold" />
-            </Setter.Value>
-        </Setter>
-    </Style>
+    <!-- Badge styles are defined inline in views (Child property cannot be set in Style Setter) -->
 
     <!-- ======================== TEXTBLOCK HEADINGS ======================== -->
 

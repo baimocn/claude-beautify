@@ -70,10 +70,15 @@ function Initialize-ComponentsView {
         } catch {}
     })
 
-    # Apply button
+    # Apply button - async with runspace
     $ViewElement.FindName("BtnApply").Add_Click({
+        param($sender, $e)
         try {
-            $results = @()
+            $btn = $sender
+            $scriptRoot = $script:ScriptRoot
+
+            # Build the operation list first (on UI thread, fast)
+            $ops = @()
             $comps = Get-Components
             foreach ($entry in $script:ComponentsMap.GetEnumerator()) {
                 $comp = $comps[$entry.Key]
@@ -84,28 +89,91 @@ function Initialize-ComponentsView {
                 if ($wantInstalled -and -not $isInstalled) {
                     $fn = "Install-$($entry.Key)"
                     if (Get-Command $fn -ErrorAction SilentlyContinue) {
-                        $r = & $fn
-                        $results += $r
+                        $ops += $fn
                     }
                 } elseif (-not $wantInstalled -and $isInstalled) {
                     $fn = "Uninstall-$($entry.Key)"
                     if (Get-Command $fn -ErrorAction SilentlyContinue) {
-                        $r = & $fn
-                        $results += $r
+                        $ops += $fn
                     }
                 }
             }
 
-            Update-ComponentStatus
+            if ($ops.Count -eq 0) {
+                [System.Windows.MessageBox]::Show("没有需要操作的组件", "提示", "OK", "Information")
+                return
+            }
 
-            $successCount = ($results | Where-Object { $_.Success }).Count
-            $failCount = ($results | Where-Object { -not $_.Success }).Count
-            $msg = "操作完成: $successCount 成功"
-            if ($failCount -gt 0) { $msg += ", $failCount 失败" }
-            [System.Windows.MessageBox]::Show($msg, "提示", "OK", "Information")
+            # Disable button and show loading
+            $origContent = $btn.Content
+            $origBg = $btn.Background
+            $btn.Content = "请稍候..."
+            $btn.IsEnabled = $false
+            $btn.Background = [System.Windows.Media.BrushConverter]::new().ConvertFromString("#999999")
 
-            # Refresh view
-            Initialize-ComponentsView -ViewElement $script:ComponentsViewElement
+            # Create background runspace
+            $rs = [runspacefactory]::CreateRunspace()
+            $rs.Open()
+            $ps = [powershell]::Create()
+            $ps.Runspace = $rs
+            $ps.AddScript({
+                param($scriptRoot, $opList)
+                $ErrorActionPreference = "Stop"
+                Import-Module (Join-Path $scriptRoot "Modules\Utils.psm1") -Force -DisableNameChecking
+                Import-Module (Join-Path $scriptRoot "Modules\State.psm1") -Force -DisableNameChecking
+                Import-Module (Join-Path $scriptRoot "Modules\Detection.psm1") -Force -DisableNameChecking
+                Import-Module (Join-Path $scriptRoot "Modules\Actions.psm1") -Force -DisableNameChecking
+                Import-Module (Join-Path $scriptRoot "Modules\Preview.psm1") -Force -DisableNameChecking
+                Import-Module (Join-Path $scriptRoot "Modules\Profiles.psm1") -Force -DisableNameChecking
+
+                $results = @()
+                foreach ($fnName in $opList) {
+                    $r = & $fnName
+                    $results += $r
+                }
+                Update-ComponentStatus
+                $results
+            }).AddArgument($scriptRoot).AddArgument($ops)
+
+            $job = $ps.BeginInvoke()
+
+            # Poll with DispatcherTimer
+            $timer = New-Object System.Windows.Threading.DispatcherTimer
+            $timer.Interval = [TimeSpan]::FromMilliseconds(500)
+            $timer.Tag = @{ Job=$job; PS=$ps; RS=$rs; Btn=$btn; OrigContent=$origContent; OrigBg=$origBg }
+            $timer.Add_Tick({
+                param($tSender, $tArgs)
+                $t = $tSender
+                $info = $t.Tag
+                if ($info.Job.IsCompleted) {
+                    $t.Stop()
+                    try {
+                        $results = $info.PS.EndInvoke($info.Job)
+                        if ($results) {
+                            $successCount = ($results | Where-Object { $_.Success }).Count
+                            $failCount = ($results | Where-Object { -not $_.Success }).Count
+                            $msg = "操作完成: $successCount 成功"
+                            if ($failCount -gt 0) { $msg += ", $failCount 失败" }
+                        } else {
+                            $msg = "操作已完成（无返回结果）"
+                        }
+                        [System.Windows.MessageBox]::Show($msg, "提示", "OK", "Information")
+                    } catch {
+                        [System.Windows.MessageBox]::Show("操作失败: $($_.Exception.Message)", "错误", "OK", "Error")
+                    } finally {
+                        $info.PS.Dispose()
+                        $info.RS.Close()
+                        $info.RS.Dispose()
+                        # Re-enable button
+                        $info.Btn.Content = $info.OrigContent
+                        $info.Btn.Background = $info.OrigBg
+                        $info.Btn.IsEnabled = $true
+                        # Refresh view
+                        Initialize-ComponentsView -ViewElement $script:ComponentsViewElement
+                    }
+                }
+            })
+            $timer.Start()
         } catch {
             [System.Windows.MessageBox]::Show("操作失败: $($_.Exception.Message)", "错误", "OK", "Error")
         }

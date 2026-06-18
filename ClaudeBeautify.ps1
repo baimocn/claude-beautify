@@ -154,6 +154,18 @@ try {
     $mainXaml = Join-Path $script:ScriptRoot "Views\MainWindow.xaml"
     $script:MainWindow = Load-XamlFile -Path $mainXaml
 
+    # Load and merge resource dictionaries
+    $stylesPath = Join-Path $script:ScriptRoot "Views\Resources\Styles.xaml"
+    $iconsPath = Join-Path $script:ScriptRoot "Views\Resources\Icons.xaml"
+    if (Test-Path $stylesPath) {
+        $styles = Load-XamlFile -Path $stylesPath
+        $script:MainWindow.Resources.MergedDictionaries.Add($styles)
+    }
+    if (Test-Path $iconsPath) {
+        $icons = Load-XamlFile -Path $iconsPath
+        $script:MainWindow.Resources.MergedDictionaries.Add($icons)
+    }
+
     # Wire navigation
     $navHandlers = @{
         "NavDashboard"  = { Show-View -ViewName "Dashboard" }

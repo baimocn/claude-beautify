@@ -5,6 +5,30 @@
 # Get-AppData, Set-AppData, Update-ComponentStatus, etc.) are available directly.
 
 # ---------------------------------------------------------------------------
+# Backup helper
+# ---------------------------------------------------------------------------
+
+function Backup-ConfigFile {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory)]
+        [string]$Path
+    )
+
+    if (Test-Path $Path) {
+        $ts = Get-Date -Format "yyyyMMdd-HHmmss"
+        $bakPath = "$Path.bak.$ts"
+        try {
+            Copy-Item -Path $Path -Destination $bakPath -Force
+            Write-AppLog "Backup-ConfigFile: backed up $Path -> $bakPath"
+        }
+        catch {
+            Write-AppLog "Backup-ConfigFile: failed to backup $Path : $_" -Level Warn
+        }
+    }
+}
+
+# ---------------------------------------------------------------------------
 # 1. Install-OhMyPosh
 # ---------------------------------------------------------------------------
 
@@ -274,7 +298,8 @@ function Apply-WTSettings {
             $wtSettings.schemes += [PSCustomObject]$tokyoNightScheme
         }
 
-        # Write back
+        # Backup and write back
+        Backup-ConfigFile -Path $wtSettingsPath
         Write-AppLog "Writing WT settings to $wtSettingsPath"
         $written = Write-JsonFile $wtSettingsPath $wtSettings
         if (-not $written) {
@@ -329,6 +354,7 @@ function Apply-PSProfile {
                     New-Item -ItemType Directory -Path $dir -Force | Out-Null
                     Write-AppLog "Created directory: $dir"
                 }
+                Backup-ConfigFile -Path $pp
                 [IO.File]::WriteAllText($pp, $profileContent, [Text.Encoding]::UTF8)
                 Write-AppLog "Wrote profile to: $pp"
             }
@@ -397,6 +423,7 @@ function Install-StatusLine {
         }
         $settings | Add-Member -NotePropertyName "statusLine" -NotePropertyValue $statusLineObj -Force
 
+        Backup-ConfigFile -Path $settingsPath
         $written = Write-JsonFile $settingsPath $settings
         if (-not $written) {
             return @{ Success = $false; Message = "写入 Claude 设置失败" }
@@ -549,6 +576,7 @@ function Uninstall-PSProfile {
             if (Test-Path $pp) {
                 $content = Get-Content -Path $pp -Raw -Encoding UTF8 -ErrorAction SilentlyContinue
                 if ($content -and $content -match "oh-my-posh init") {
+                    Backup-ConfigFile -Path $pp
                     Remove-Item -Path $pp -Force
                     Write-AppLog "Deleted profile: $pp"
                     $deleted++
@@ -623,7 +651,8 @@ function Uninstall-WTConfig {
             $wtSettings.schemes = $filteredSchemes
         }
 
-        # Write back
+        # Backup and write back
+        Backup-ConfigFile -Path $wtSettingsPath
         $written = Write-JsonFile $wtSettingsPath $wtSettings
         if (-not $written) {
             return @{ Success = $false; Message = "写入 Windows Terminal 配置失败" }
