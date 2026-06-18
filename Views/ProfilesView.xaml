@@ -1,0 +1,32 @@
+<UserControl xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Background="#F5F0E8">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Row 0: Action bar -->
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,12">
+            <Button x:Name="BtnSaveProfile"
+                    Content="保存当前配置"
+                    Background="#D97757"
+                    Foreground="White"
+                    Padding="16,8"
+                    BorderThickness="0"/>
+            <Button x:Name="BtnImportProfile"
+                    Content="导入方案"
+                    Background="#E0D8CC"
+                    Foreground="#2C2521"
+                    Padding="16,8"
+                    BorderThickness="0"
+                    Margin="8,0,0,0"/>
+        </StackPanel>
+
+        <!-- Row 1: Profile list -->
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+            <StackPanel x:Name="ProfileList"/>
+        </ScrollViewer>
+    </Grid>
+</UserControl>

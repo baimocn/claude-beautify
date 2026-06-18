@@ -1,0 +1,22 @@
+# PowerShell
+*.ps1xml
+
+# Logs
+*.log
+Logs/
+
+# Node
+mcp-server/node_modules/
+mcp-server/package-lock.json
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# User profiles (don't commit user configs)
+*.tmp
