@@ -393,6 +393,70 @@ function Install-StatusLine {
 }
 
 # ---------------------------------------------------------------------------
+# 7b. Uninstall-NerdFont
+# ---------------------------------------------------------------------------
+
+function Uninstall-NerdFont {
+    [CmdletBinding()]
+    param()
+
+    try {
+        Write-AppLog "Uninstall-NerdFont: starting..."
+
+        if (-not (Test-ChocolateyInstalled)) {
+            return @{ Success = $false; Message = "请先安装 Chocolatey 包管理器" }
+        }
+
+        if (Test-AdminPrivilege) {
+            $output = & cmd /c "choco uninstall cascadia-code-nerd-font -y" 2>&1
+            Write-AppLog ($output | Out-String)
+        }
+        else {
+            $exitCode = Invoke-Elevated "choco uninstall cascadia-code-nerd-font -y"
+            if ($exitCode -ne 0) {
+                Write-AppLog "Elevated font uninstall exited with code $exitCode" -Level Warn
+            }
+        }
+
+        Update-ComponentStatus
+        Write-AppLog "Uninstall-NerdFont: complete."
+        return @{ Success = $true; Message = "Nerd Font 已卸载" }
+    }
+    catch {
+        Write-AppLog "Uninstall-NerdFont failed: $_" -Level Error
+        return @{ Success = $false; Message = "Nerd Font 卸载失败: $_" }
+    }
+}
+
+# ---------------------------------------------------------------------------
+# 7c. Uninstall-WindowsTerminal
+# ---------------------------------------------------------------------------
+
+function Uninstall-WindowsTerminal {
+    [CmdletBinding()]
+    param()
+
+    try {
+        Write-AppLog "Uninstall-WindowsTerminal: starting..."
+
+        if (-not (Test-ChocolateyInstalled)) {
+            return @{ Success = $false; Message = "请先安装 Chocolatey 包管理器" }
+        }
+
+        $output = & cmd /c "choco uninstall microsoft-windows-terminal -y" 2>&1
+        Write-AppLog ($output | Out-String)
+
+        Update-ComponentStatus
+        Write-AppLog "Uninstall-WindowsTerminal: complete."
+        return @{ Success = $true; Message = "Windows Terminal 已卸载" }
+    }
+    catch {
+        Write-AppLog "Uninstall-WindowsTerminal failed: $_" -Level Error
+        return @{ Success = $false; Message = "Windows Terminal 卸载失败: $_" }
+    }
+}
+
+# ---------------------------------------------------------------------------
 # 8. Uninstall-StatusLine
 # ---------------------------------------------------------------------------
 

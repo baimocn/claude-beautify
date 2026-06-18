@@ -1,12 +1,18 @@
-﻿function Initialize-ComponentsView {
+﻿# Module-level ref for event handlers
+$script:ComponentsViewElement = $null
+$script:ComponentsMap = $null
+
+function Initialize-ComponentsView {
     param($ViewElement)
+
+    $script:ComponentsViewElement = $ViewElement
 
     # Run detection
     Update-ComponentStatus
     $components = Get-Components
 
-    # Mapping: component key -> UI element names
-    $map = @{
+    # Mapping
+    $script:ComponentsMap = @{
         "OhMyPosh"    = @{ Chk="ChkOhMyPosh";    Badge="BadgeOhMyPosh";    BadgeText="BadgeTextOhMyPosh" }
         "NerdFont"    = @{ Chk="ChkNerdFont";    Badge="BadgeNerdFont";    BadgeText="BadgeTextNerdFont" }
         "WinTerminal" = @{ Chk="ChkWinTerminal";  Badge="BadgeWinTerminal"; BadgeText="BadgeTextWinTerminal" }
@@ -16,7 +22,7 @@
     }
 
     # Set initial checkbox and badge states
-    foreach ($entry in $map.GetEnumerator()) {
+    foreach ($entry in $script:ComponentsMap.GetEnumerator()) {
         $comp = $components[$entry.Key]
         $names = $entry.Value
 
@@ -37,69 +43,74 @@
         }
     }
 
-    # Update selection summary
+    # Update summary helper
     $updateSummary = {
-        $count = 0
-        foreach ($entry in $map.GetEnumerator()) {
-            $chk = $ViewElement.FindName($entry.Value.Chk)
-            if ($chk.IsChecked) { $count++ }
-        }
-        $ViewElement.FindName("SelectionSummary").Text = "已选择 $count 项"
+        try {
+            $count = 0
+            foreach ($entry in $script:ComponentsMap.GetEnumerator()) {
+                $chk = $script:ComponentsViewElement.FindName($entry.Value.Chk)
+                if ($chk.IsChecked) { $count++ }
+            }
+            $script:ComponentsViewElement.FindName("SelectionSummary").Text = "已选择 $count 项"
+        } catch {}
     }
 
-    # Wire checkbox change events
-    foreach ($entry in $map.GetEnumerator()) {
-        $chk = $ViewElement.FindName($entry.Value.Chk)
-        $chk.Add_Checked($updateSummary)
-        $chk.Add_Unchecked($updateSummary)
+    # Wire checkbox events
+    foreach ($entry in $script:ComponentsMap.GetEnumerator()) {
+        $script:ComponentsViewElement.FindName($entry.Value.Chk).Add_Checked($updateSummary)
+        $script:ComponentsViewElement.FindName($entry.Value.Chk).Add_Unchecked($updateSummary)
     }
 
     # Select All button
     $ViewElement.FindName("BtnSelectAll").Add_Click({
-        foreach ($entry in $map.GetEnumerator()) {
-            $ViewElement.FindName($entry.Value.Chk).IsChecked = $true
-        }
+        try {
+            foreach ($entry in $script:ComponentsMap.GetEnumerator()) {
+                $script:ComponentsViewElement.FindName($entry.Value.Chk).IsChecked = $true
+            }
+        } catch {}
     })
 
     # Apply button
     $ViewElement.FindName("BtnApply").Add_Click({
-        $results = @()
-        foreach ($entry in $map.GetEnumerator()) {
-            $comp = $components[$entry.Key]
-            $chk = $ViewElement.FindName($entry.Value.Chk)
-            $wantInstalled = $chk.IsChecked
-            $isInstalled = $comp.Installed
+        try {
+            $results = @()
+            $comps = Get-Components
+            foreach ($entry in $script:ComponentsMap.GetEnumerator()) {
+                $comp = $comps[$entry.Key]
+                $chk = $script:ComponentsViewElement.FindName($entry.Value.Chk)
+                $wantInstalled = $chk.IsChecked
+                $isInstalled = $comp.Installed
 
-            if ($wantInstalled -and -not $isInstalled) {
-                # Need to install
-                $fn = "Install-$($entry.Key)"
-                if (Get-Command $fn -ErrorAction SilentlyContinue) {
-                    $r = & $fn
-                    $results += $r
-                }
-            } elseif (-not $wantInstalled -and $isInstalled) {
-                # Need to uninstall
-                $fn = "Uninstall-$($entry.Key)"
-                if (Get-Command $fn -ErrorAction SilentlyContinue) {
-                    $r = & $fn
-                    $results += $r
+                if ($wantInstalled -and -not $isInstalled) {
+                    $fn = "Install-$($entry.Key)"
+                    if (Get-Command $fn -ErrorAction SilentlyContinue) {
+                        $r = & $fn
+                        $results += $r
+                    }
+                } elseif (-not $wantInstalled -and $isInstalled) {
+                    $fn = "Uninstall-$($entry.Key)"
+                    if (Get-Command $fn -ErrorAction SilentlyContinue) {
+                        $r = & $fn
+                        $results += $r
+                    }
                 }
             }
+
+            Update-ComponentStatus
+
+            $successCount = ($results | Where-Object { $_.Success }).Count
+            $failCount = ($results | Where-Object { -not $_.Success }).Count
+            $msg = "操作完成: $successCount 成功"
+            if ($failCount -gt 0) { $msg += ", $failCount 失败" }
+            [System.Windows.MessageBox]::Show($msg, "提示", "OK", "Information")
+
+            # Refresh view
+            Initialize-ComponentsView -ViewElement $script:ComponentsViewElement
+        } catch {
+            [System.Windows.MessageBox]::Show("操作失败: $($_.Exception.Message)", "错误", "OK", "Error")
         }
-
-        # Refresh the view
-        Update-ComponentStatus
-
-        $successCount = ($results | Where-Object { $_.Success }).Count
-        $failCount = ($results | Where-Object { -not $_.Success }).Count
-        $msg = "操作完成: $successCount 成功"
-        if ($failCount -gt 0) { $msg += ", $failCount 失败" }
-        [System.Windows.MessageBox]::Show($msg, "提示", "OK", "Information")
-
-        # Re-initialize view to refresh badges
-        Initialize-ComponentsView -ViewElement $ViewElement
     })
 
-    # Call initial summary update
+    # Initial summary
     & $updateSummary
 }
