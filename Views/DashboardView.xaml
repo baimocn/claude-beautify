@@ -6,6 +6,8 @@
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
@@ -27,8 +29,59 @@
             </Grid>
         </Border>
 
-        <!-- Row 1: Cards Grid -->
-        <WrapPanel Grid.Row="1" Margin="0,8">
+        <!-- Row 1: Health Check Summary -->
+        <Border Grid.Row="1" Background="#FFFFFF" CornerRadius="8" Padding="16,12" Margin="0,0,0,12">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="健康检查" FontSize="15" FontWeight="SemiBold" Foreground="#2C2521"/>
+                        <Border x:Name="HealthOverallBadge" CornerRadius="10" Background="#E0E0E0" Padding="10,3" Margin="12,0,0,0">
+                            <TextBlock x:Name="HealthOverallText" Text="未检测" FontSize="11" Foreground="#7A7067"/>
+                        </Border>
+                    </StackPanel>
+                    <TextBlock x:Name="HealthSubtitle" Text="点击运行健康检查..." FontSize="12" Foreground="#7A7067" Margin="0,4,0,0"/>
+                </StackPanel>
+
+                <Button x:Name="BtnHealthCheck" Grid.Column="1" Content="运行健康检查"
+                        Background="#6B7AC4" Foreground="White" Padding="16,6" BorderThickness="0"/>
+            </Grid>
+        </Border>
+
+        <!-- Row 2: Health Check Detail (initially hidden) -->
+        <Border x:Name="HealthDetailPanel" Grid.Row="2" Background="#FFFFFF" CornerRadius="8"
+                BorderBrush="#E0D8CC" BorderThickness="1" Padding="16" Margin="0,0,0,12"
+                Visibility="Collapsed">
+            <StackPanel>
+                <TextBlock Text="组件健康详情" FontSize="13" FontWeight="SemiBold" Foreground="#2C2521" Margin="0,0,0,8"/>
+
+                <!-- Per-component health status chips -->
+                <WrapPanel x:Name="HealthChipsPanel" Margin="0,0,0,8">
+                    <!-- Dynamically populated -->
+                </WrapPanel>
+
+                <!-- Selected component detail -->
+                <Border x:Name="HealthDetailBox" Background="#F9F6F2" CornerRadius="6" Padding="12" Margin="0,8,0,0">
+                    <StackPanel>
+                        <TextBlock x:Name="HealthDetailTitle" Text="选择组件查看详情" FontSize="12" FontWeight="SemiBold" Foreground="#2C2521"/>
+                        <TextBlock x:Name="HealthDetailContent" Text="" FontSize="11" Foreground="#5A5047" TextWrapping="Wrap" Margin="0,6,0,0"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- Fix button row -->
+                <StackPanel x:Name="HealthFixPanel" Orientation="Horizontal" Margin="0,10,0,0" Visibility="Collapsed">
+                    <Button x:Name="BtnFixSelected" Content="一键修复选中问题"
+                            Background="#D97757" Foreground="White" Padding="16,6" BorderThickness="0"/>
+                </StackPanel>
+            </StackPanel>
+        </Border>
+
+        <!-- Row 3: Cards Grid -->
+        <WrapPanel Grid.Row="3" Margin="0,8">
 
             <!-- Card 1: Oh My Posh -->
             <Border x:Name="CardOhMyPosh" Background="#FFFFFF" CornerRadius="8" BorderBrush="#E0D8CC" BorderThickness="1" Padding="16" Margin="6">

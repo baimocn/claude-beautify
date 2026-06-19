@@ -172,6 +172,28 @@
                         </StackPanel>
                     </Button>
 
+                    <!-- Profile Diff -->
+                    <Button x:Name="NavProfileDiff"
+                            Height="42"
+                            Margin="8,1"
+                            Cursor="Hand"
+                            Background="Transparent"
+                            BorderThickness="0"
+                            HorizontalContentAlignment="Left">
+                        <StackPanel Orientation="Horizontal" Margin="14,0,0,0">
+                            <TextBlock Text="&#xE74C;"
+                                       FontFamily="Segoe MDL2 Assets"
+                                       FontSize="16"
+                                       Foreground="#9E9589"
+                                       VerticalAlignment="Center"
+                                       Width="28" />
+                            <TextBlock Text="方案对比"
+                                       FontSize="13"
+                                       Foreground="#C0B8AE"
+                                       VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+
                 </StackPanel>
 
                 <!-- Row 2: Footer -->
