@@ -20,3 +20,9 @@ Desktop.ini
 
 # User profiles (don't commit user configs)
 *.tmp
+
+# Backups
+*.bak*
+
+# Environment
+.env

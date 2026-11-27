@@ -108,20 +108,38 @@ claude-beautify/
 │   ├── Detection.psm1          # 组件安装检测
 │   ├── Actions.psm1            # 安装/卸载/应用操作
 │   ├── Preview.psm1            # 终端预览渲染引擎
-│   └── Profiles.psm1           # 配置方案管理
+│   ├── Profiles.psm1           # 配置方案管理
+│   ├── Constants.psm1          # 常量定义
+│   ├── HealthCheck.psm1        # 健康检查
+│   └── Tests/                  # 模块测试
+│       └── test_profiles_diff.ps1  # 配置方案差异测试
 │
-├── Views/                      # WPF 视图文件
+├── Views/                      # WPF 视图文件（.xaml + .ps1 代码后置）
 │   ├── MainWindow.xaml         # 主窗口（侧边栏导航）
 │   ├── DashboardView.xaml      # 仪表盘
+│   ├── DashboardView.ps1
 │   ├── ComponentsView.xaml     # 组件管理
+│   ├── ComponentsView.ps1
 │   ├── ConfigView.xaml         # 设置面板
+│   ├── ConfigView.ps1
 │   ├── ThemeSwitcherView.xaml  # 主题切换
-│   └── ProfilesView.xaml       # 配置方案
+│   ├── ThemeSwitcherView.ps1
+│   ├── ProfilesView.xaml       # 配置方案
+│   ├── ProfilesView.ps1
+│   ├── ProfileDiffView.xaml    # 配置方案差异对比
+│   ├── ProfileDiffView.ps1
+│   └── Resources/              # 共享资源
+│       ├── Styles.xaml         # 全局样式
+│       └── Icons.xaml          # 图标资源
 │
 ├── Templates/                  # 默认配置模板
+│   ├── profile-default.ps1     # PowerShell Profile 默认模板
+│   ├── statusline-default.sh   # 状态栏默认模板
+│   └── terminal-default.json   # Windows Terminal 默认模板
 └── mcp-server/                 # MCP Server（Node.js）
     ├── package.json
-    └── index.js
+    ├── index.js
+    └── test_tools.js           # MCP 工具测试
 ```
 
 ## ⚙️ 自定义
